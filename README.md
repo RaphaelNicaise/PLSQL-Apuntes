@@ -1,5 +1,5 @@
 # PL - SQL
-
+Estos son mis apuntes del curso de PLSQL en youtube dado por -> @INFORMATICONFIG
 [Curso completo de Oracle PLSQL desde cero en Español para principiantes](https://www.youtube.com/playlist?list=PL2Z95CSZ1N4EO3wqFmTBNZXCovLpxkEqB)
 
 [Video 1 - Bloques PL/SQL](https://www.youtube.com/watch?v=l6wOghW_gNI&list=PL2Z95CSZ1N4EO3wqFmTBNZXCovLpxkEqB&index=1)
