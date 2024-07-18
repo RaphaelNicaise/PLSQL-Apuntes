@@ -1,5 +1,5 @@
 # PL - SQL
-Estos son mis apuntes del curso de PLSQL en youtube dado por -> @INFORMATICONFIG
+
 [Curso completo de Oracle PLSQL desde cero en Español para principiantes](https://www.youtube.com/playlist?list=PL2Z95CSZ1N4EO3wqFmTBNZXCovLpxkEqB)
 
 [Video 1 - Bloques PL/SQL](https://www.youtube.com/watch?v=l6wOghW_gNI&list=PL2Z95CSZ1N4EO3wqFmTBNZXCovLpxkEqB&index=1)
@@ -552,8 +552,266 @@ BEGIN
 END;
 ```
 
-[Video 15 - Condicional CASE](https://www.youtube.com/watch?v=gDj5bRrpHgQ&list=PL2Z95CSZ1N4EO3wqFmTBNZXCovLpxkEqB&index=15)
+Ejemplo de PROC Y FUNCIONES
 
 ```sql
+DECLARE
+    suma NUMBER := 0;
+    numero NUMBER;
+    suma_total NUMBER := 0;
+BEGIN
+    FOR i IN 1..10 LOOP
+        dbms_output.put_line('Tabla del '|| i);
+        FOR j IN 1..10 LOOP
+            numero := j*i;
+            suma := numero + suma;
+            dbms_output.put_line(i || ' x ' || j  || ' = ' || numero);
+        END LOOP;
+        dbms_output.put_line('Suma de todos los numeros de la tabla del ' || i || ': ' || suma);
+        suma_total := suma_total + suma;
+    END LOOP;
+    dbms_output.put_line('Suma de la suma de todas las tablas: '||suma_total);
+END;
+-- EL CODIGO DE RECIEN SE TRANSFORMA EN ESTO
 
+-- FUNCION PARA SUMAR TODOS LOS VALORES DE UNA TABLA EN CONCRETO
+-- TABLA DE 3, SUMA 3 + 6 + 9 + 12, asi hasta el 3*10
+CREATE OR REPLACE FUNCTION calcular_suma_tabla(atabladel IN number)
+RETURN NUMBER
+IS
+    suma NUMBER := 0;
+BEGIN
+    FOR i IN 1..10 LOOP
+        suma := suma + atabladel*i;
+    END LOOP;
+    RETURN suma;
+END;
+-- PROCEDIMIENTO PARA MOSTRAR UNA TABLA, QUE DENTRO CONTIENE LA FUNCION DE SUMAR
+CREATE OR REPLACE PROCEDURE mostrar_tabla 
+(atabladel IN number)
+-- RECIBE COMO PARAMETRO LA TABLA, SI INGRESAS 1, MUESTRA LA TABLA DEL 1
+AS
+    multiplicacion NUMBER;
+    suma_tabla NUMBER;
+BEGIN
+    dbms_output.put_line('Tabla del '|| atabladel);
+    FOR i IN 1..10 LOOP
+        
+        multiplicacion := atabladel * i;
+        dbms_output.put_line(atabladel ||' x '|| i ||' = '|| multiplicacion);
+    END LOOP;
+        suma_tabla := calcular_suma_tabla(atabladel);
+        dbms_output.put_line('Suma de la tabla del '||atabladel||' = '|| suma_tabla);
+        dbms_output.put_line(' ');
+END mostrar_tabla;
+
+-- CODIGO PL/SQL PARA LLAMAR AL PROCEDIMIENTO
+BEGIN
+    FOR i IN 1..10 LOOP
+        mostrar_tabla(i);
+    END LOOP;
+END;
+```
+
+[Video 15 - Condicional CASE](https://www.youtube.com/watch?v=gDj5bRrpHgQ&list=PL2Z95CSZ1N4EO3wqFmTBNZXCovLpxkEqB&index=15)
+
+- Un if else anidado ↔ Case
+
+```sql
+case variable -- tiene que ser de un caracter
+	when 1 then --bloque de codigo -- when variable = 1
+	when 2 then -- bloque de codigo
+	when 3 then -- bloque de codigo
+	else -- bloque de codigo si no
+end case;
+```
+
+```sql
+create or replace function f_diasemana(numero int)
+return varchar2
+is
+    dia varchar2(25);
+begin
+ dia := '';
+    case numero
+        when 1 then dia := 'Lunes';
+        when 2 then dia := 'Martes';
+        when 3 then dia := 'Miercoles';
+        when 4 then dia := 'Jueves';
+        when 5 then dia := 'Viernes';
+        when 6 then dia := 'Sabado';
+        when 7 then dia := 'Domingo';
+        else dia := 'No es un numero correcto';
+    end case;
+    return dia;
+end
+
+SELECT f_diasemana(1) from dual;
+```
+
+```sql
+create or replace function f_trimestre (fecha date)
+return varchar2
+is
+    mes varchar2(20);
+    trimestre number;
+begin
+    mes := extract(month from fecha);
+    trimestre := 0;
+    case mes
+        when 1 then trimestre := 1;
+        when 2 then trimestre := 1;
+        when 3 then trimestre := 1;
+        when 4 then trimestre := 2;
+        when 5 then trimestre := 2;
+        when 6 then trimestre := 2;
+        when 7 then trimestre := 3;
+        when 8 then trimestre := 3;
+        when 9 then trimestre := 3;
+        else trimestre :=4;
+    end case;
+    return trimestre;
+end
+
+select ojh.employee_id,ojh.start_date,ojh.end_date,ojh.job_id,ojh.department_id 
+from oehr_job_history ojh;
+
+select ojh.employee_id,f_trimestre(ojh.start_date) as "Entro en Trimestre",
+f_trimestre(ojh.end_date) as "Se fue en Trimestre",ojh.job_id,ojh.department_id 
+from oehr_job_history ojh;
+-- por cada registro, le aplica la funcion a los campos seleccionados
+```
+
+[Video 16 -Triggers](https://www.youtube.com/watch?v=MfRjk5AKAiI&list=PL2Z95CSZ1N4EO3wqFmTBNZXCovLpxkEqB&index=16)
+
+- Sirven para conservar la integridad referencial y la coherencia entre los datos entre distintas tablas
+- Registrar cambios que se efectuan sobre las tablas y la identidad de quien los realizo
+- Realizar cualquier accion cuando una tabla es modificada
+- Insertar, actualizar o eliminar datos de una tabla asociada de forma automatica
+
+**Reglas:**
+
+- No pueden ser invocados directamente
+- Al intentar modifcar los datos de una tabla asociada, el trigger se ejecuta automaticamente
+- No reciben ni retornan parametros
+- No generan resultados de consultas SQL
+
+**Clasificacion:**
+
+- Momento en el que se dispara:
+    - Before → Se ejecuta antes de la sentencia
+    - After → Se ejecuta despues de la sentencia
+- El evento que lo dispara: Segun se ejecute una de estas sentencias sobre la tabla
+    - Insert
+    - Update
+    - Delete
+- Nivel:
+    - Depende de si se ejecuta para cada fila afectada en la sentencia (por cada fila)
+    - O una unica vez por sentencia independientemente de las filas afectadas
+
+```sql
+-- DDL para las tablas control y libros
+ create table libros(codigo number(6),titulo varchar2(40),autor varchar2(30),editorial varchar2(20),precio number(6,2));
+ create table control(usuario varchar2(30),fecha date);
+```
+
+```sql
+create or replace trigger tr_ingresolibros
+before insert -- Esto se ejecuta cuando se detecte una insercion en libros, antes 
+on libros -- tabla en la que se detectera la insercion
+begin
+    insert into control values (user, sysdate); -- accion
+    -- user devuelve el usuario de la sesion, y sysdate la fecha actual
+end tr_ingresolibros;
+
+insert into libros (CODIGO,TITULO,AUTOR,EDITORIAL,PRECIO) 
+values (3231,'Aprendiendo Triggers','Yo','PL/SQL Editorial',3);
+-- Cuando insertemos los datos, se va a ejecutar el trigger
+-- Se ejecuta una vez por cada vez que hagamos la sentencia insert, aunque se inserteb varios registros
+select * from libros;
+select * from control;
+```
+
+```sql
+SELECT * FROM USER_TRIGGERS WHERE TRIGGER_NAME = 'TR_INGRESOLIBROS';
+-- Para ver la informacion del trigger
+```
+
+[Video 17 -  Triggers FOR EACH ROW](https://www.youtube.com/watch?v=xkhGEFEH_Ec&list=PL2Z95CSZ1N4EO3wqFmTBNZXCovLpxkEqB&index=17) 
+
+- Se va a activar el trigger por cada registro que se ingresa en una tabla, y no por sentencia
+
+```sql
+-- DDL para tabla de ejemplo
+CREATE TABLE empleados (documento char(8),apellido varchar2(30),nombre varchar2(30),seccion varchar2(20));
+-- Truncate vacia toda la tabla, pero no la borra
+TRUNCATE TABLE control;
+-- Dropear Trigger
+DROP TRIGGER tr_ingresaempleado;
+
+```
+
+```sql
+create or replace trigger ingresaempleados
+before insert -- para cada REGISTRO ingresado en empleados, antes ejecutar el begin end
+on empleados -- si no pusiesemos for each row, seria por cada insercion, que pueden ser varias filas
+for each row -- para cada registro ingresado
+
+begin
+    insert into control values (user,sysdate); -- ingresamos esto a la tabla por cada registro ingresado en empleados
+end ingresaempleados;
+```
+
+```sql
+INSERT ALL
+     into empleados values('22333444','ACOSTA','Ana','Secretaria')
+     into empleados values('22777888','DOMINGUEZ','Daniel','Secretaria')
+     into empleados values('22999000','FUENTES','Federico','Sistemas')
+     into empleados values('22555666','CASEROS','Carlos','Contaduria')
+     into empleados values('23444555','GOMEZ','Gabriela','Sistemas')
+     into empleados values('23666777','JUAREZ','Juan','Contaduria')
+SELECT * FROM dual; -- MANERA EN PL/SQL de hacer inserts en conjunto
+
+-- por cada insercion, se inserto un registro en control
+```
+
+[Video 18 -  Triggers BEFORE DELETE](https://www.youtube.com/watch?v=cxxxXU3gkDE&list=PL2Z95CSZ1N4EO3wqFmTBNZXCovLpxkEqB&index=18) 
+
+- Una accion después de detectar un delete en una tabla
+
+```sql
+-- DDL y DML para ejemplos
+create table alumnos(
+legajo varchar2(4) not null,
+documento varchar2(8) not null,
+nombre varchar2(30) not null,
+curso number(1) not null,
+materia varchar2(15) not null,
+nota_final number(3,2) not null);
+
+INSERT ALL
+ into alumnos values('A234','23333333','LOPEZ ANA',5,'MATEMATICA',9)
+ into alumnos values('A345','24444444','GARCIA CARLOS',6,'MATEMATICA',8.5)
+ into alumnos values('A457','26666666','PEREZ FABIAN',6,'LENGUA',3.2)
+ into alumnos values('A348','25555555','PEREZ PATRICIA',6,'LENGUA',7.85)
+ into alumnos values('A123','22222222','PEREZ PATRICIA',5,'MATEMATICAS',9)
+ into alumnos values('A124','32222222','GONZALES JOSE',5,'BIOLOGIA',9)
+ into alumnos values('A124','32222222','GONZALES JOSE',5,'MATEMATICAS',8)
+SELECT * FROM DUAL;
+```
+
+```sql
+create or replace trigger tr_borradoalumnos
+before delete
+on alumnos
+for each row
+	-- Por cada registro eliminado, se registrara en la tabla control
+begin
+    insert into control values (user, sysdate);
+end tr_borradoalumnos;
+
+select * from alumnos;
+delete from alumnos where nota_final < 8; -- se borran 2 registros
+-- por cada registro eliminado, el trigger tr_borradoalumnos
+-- registra una fila en control con datos
 ```
